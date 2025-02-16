@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird - JavaScript</title>
+  <style>
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #70c5ce; }
+    canvas { background: #70c5ce; display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const birdWidth = 50, birdHeight = 50;
+    let birdX = 100, birdY = canvas.height / 2;
+    let birdVelocity = 0;
+    const gravity = 0.6, jumpStrength = -10;
+    let isGameOver = false;
+
+    const pipes = [];
+    const pipeWidth = 70, gap = 200;
+    let pipeSpeed = 3;
+    let score = 0;
+
+    // Función para dibujar el pájaro
+    function drawBird() {
+      ctx.fillStyle = 'yellow';
+      ctx.fillRect(birdX, birdY, birdWidth, birdHeight);
+    }
+
+    // Función para dibujar las tuberías
+    function drawPipes() {
+      for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
+        ctx.fillStyle = 'green';
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+        ctx.fillRect(pipe.x, pipe.top + gap, pipeWidth, canvas.height - pipe.top - gap);
+      }
+    }
+
+    // Función para mover las tuberías
+    function movePipes() {
+      for (let i = 0; i < pipes.length; i++) {
+        pipes[i].x -= pipeSpeed;
+
+        // Si la tubería se ha movido fuera de la pantalla, eliminarla
+        if (pipes[i].x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+          score++;
+        }
+      }
+    }
+
+    // Función para crear nuevas tuberías
+    function generatePipes() {
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
+        const pipeHeight = Math.random() * (canvas.height - gap);
+        pipes.push({ x: canvas.width, top: pipeHeight });
+      }
+    }
+
+    // Función de salto del pájaro
+    function birdJump() {
+      birdVelocity = jumpStrength;
+    }
+
+    // Función de actualización del juego
+    function update() {
+      if (isGameOver) return;
+
+      birdVelocity += gravity;
+      birdY += birdVelocity;
+
+      // Evitar que el pájaro se caiga fuera de la pantalla
+      if (birdY + birdHeight > canvas.height || birdY < 0) {
+        isGameOver = true;
+        alert('Game Over!');
+        return;
+      }
+
+      // Dibujar todo
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBird();
+      movePipes();
+      drawPipes();
+      generatePipes();
+
+      // Verificar colisiones con las tuberías
+      for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
+        if (
+          birdX + birdWidth > pipe.x && birdX < pipe.x + pipeWidth &&
+          (birdY < pipe.top || birdY + birdHeight > pipe.top + gap)
+        ) {
+          isGameOver = true;
+          alert('Game Over!');
+        }
+      }
+
+      // Mostrar puntaje
+      ctx.font = '20px Arial';
+      ctx.fillStyle = 'black';
+      ctx.fillText('Score: ' + score, 10, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    // Escuchar el evento de salto
+    window.addEventListener('keydown', function(event) {
+      if (event.key === ' ') { // Espacio para saltar
+        birdJump();
+      }
+    });
+
+    // Iniciar juego
+    update();
+  </script>
+</body>
+</html>
